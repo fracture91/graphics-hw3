@@ -88,12 +88,12 @@ class LSystemReader {
 		LSystemReader(const char* filename) {
 			content = string(textFileRead(filename));
 			this->filename = filename;
-			state = LEN;
 		}
 
 		// construct a new LSystem from the given file
 		// caller is responsible for freeing memory
 		LSystem* read() {
+			state = LEN;
 			lsys = new LSystem(filename);
 			stringstream stream(content, stringstream::in);
 			string line;
