@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <stdexcept>
+#include <stack>
 
 #include "Angel.h"
 
@@ -14,6 +15,28 @@ using std::pair;
 using std::runtime_error;
 using std::cout;
 using std::endl;
+using std::stack;
+
+class Turtle {
+	public:
+		unsigned segmentLength;
+		vec3 rotations;
+		stack<mat4>* ctm;
+		enum Axis { X, Y, Z };
+
+		Turtle() {
+			segmentLength = 0;
+			rotations = vec3(0, 0, 0);
+			ctm = NULL;
+		}
+
+		void rotate(Axis axis, bool positive) {
+			
+		}
+};
+
+Turtle* tur = new Turtle();
+tur->rotate(0, true);
 
 class LSystem {
 	private:
