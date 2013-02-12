@@ -2,30 +2,16 @@
 #ifndef __PLYREADER_H_
 #define __PLYREADER_H_
 
-#include <stdexcept>
 #include <sstream>
 
 #include "Mesh.hpp"
 #include "textfile.cpp"
+#include "ReaderException.hpp"
 
 using std::string;
 using std::stringstream;
 using std::endl;
 using std::cout;
-
-// thrown if the reader chokes and dies
-struct ReaderException : public std::runtime_error {
-	string reason;
-	public:
-		ReaderException(string _reason) : std::runtime_error(_reason) {
-			reason = _reason;
-		}
-		const char* what() const throw() {
-			return reason.c_str();
-		}
-		~ReaderException() throw() {
-		}
-};
 
 // reads a PLY file
 class PLYReader {
