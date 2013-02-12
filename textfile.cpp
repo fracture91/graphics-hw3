@@ -10,6 +10,10 @@
 //////////////////////////////////////////////////////////////////////
 
 // Visual Studio warns about deprecated fopen. Get rid of that warning
+
+#ifndef __TEXTFILE_CPP_
+#define __TEXTFILE_CPP_
+
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
@@ -61,4 +65,6 @@ int textFileWrite(const char *fn, char *s) {
 	}
 	return(status);
 }
+
+#endif
 

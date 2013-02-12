@@ -22,6 +22,8 @@
 len: 1
 iter: 3
 rot: 22.5 22.5 22.5
-start: F
+rep: B,
+rep: C,F
+start: FBC
 F: F
 # TODO

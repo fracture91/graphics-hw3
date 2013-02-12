@@ -99,7 +99,7 @@ class PLYReader {
 
 		}
 
-		bool startsWith(string str, string prefix) {
+		static bool startsWith(string str, string prefix) {
 			return str.substr(0, prefix.size()) == prefix;
 		}
 

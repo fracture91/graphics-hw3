@@ -1,5 +1,6 @@
-hw3: hw3.cpp vshader1.glsl fshader1.glsl Angel.h CheckError.h\
-		mat.h vec.h textfile.h textfile.cpp InitShader.cpp
+hw3: hw3.cpp vshader1.glsl fshader1.glsl Angel.h CheckError.h mat.h vec.h\
+		textfile.h textfile.cpp InitShader.cpp Mesh.hpp PLYReader.hpp\
+		MeshRenderer.hpp LSystemReader.hpp LSystem.hpp ReaderException.hpp
 	cl /EHsc hw3.cpp glew32s.lib
 
 clean:

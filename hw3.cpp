@@ -9,6 +9,8 @@
 #include "Mesh.hpp"
 #include "PLYReader.hpp"
 #include "MeshRenderer.hpp"
+#include "LSystem.hpp"
+#include "LSystemReader.hpp"
 
 // remember to prototype
 void display(void);
@@ -125,11 +127,12 @@ int main(int argc, char **argv) {
 	glutInitWindowSize(512, 512);
 
 	// get a list of all the mesh data in meshes directory
-	vector<string>* names = getFileNames("meshes");
-	vector<Mesh*> meshes = vector<Mesh*>();
+	vector<string>* names = getFileNames("lsystems");
+	vector<LSystem*> lsystems = vector<LSystem*>();
 	for(vector<string>::const_iterator i = names->begin(); i != names->end(); ++i) {
-		PLYReader reader((*i).c_str());
-		meshes.push_back(reader.read());
+		LSystemReader reader((*i).c_str());
+		lsystems.push_back(reader.read());
+		lsystems[lsystems.size() - 1]->print();
 	}
 
 	// If you are using freeglut, the next two lines will check if 
@@ -150,6 +153,10 @@ int main(int argc, char **argv) {
 	glewInit();
 
 	GLuint program = setUpShaders();
+	// just a temp thing so we don't crash
+	vector<Mesh*> meshes = vector<Mesh*>();
+	PLYReader reader("meshes/cylinder.ply");
+	meshes.push_back(reader.read());
 	meshRenderer = new MeshRenderer(meshes, program);
 	// assign handlers
 	glutDisplayFunc(display);
