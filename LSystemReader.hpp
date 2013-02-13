@@ -32,7 +32,7 @@ class LSystemReader {
 
 			switch(state) {
 				case LEN:
-					ss >> garbage >> lsys->segmentLength;
+					ss >> garbage >> lsys->protoTurtle.segmentLength;
 					if(garbage != "len:") {
 						throw ReaderException("len expected");
 					}
@@ -46,7 +46,7 @@ class LSystemReader {
 					state = ROT;
 					break;
 				case ROT: {
-					vec3* rots = &lsys->rotations;
+					vec3* rots = &lsys->protoTurtle.rotations;
 					ss >> garbage >> rots->x >> rots->y >> rots->z;
 					if(garbage != "rot:") {
 						throw ReaderException("rot expected");

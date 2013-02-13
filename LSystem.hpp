@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <stdexcept>
+#include <stack>
 
 #include "Angel.h"
 
@@ -14,6 +15,66 @@ using std::pair;
 using std::runtime_error;
 using std::cout;
 using std::endl;
+using std::stack;
+
+// contains basic drawing parameters
+// modifies a given transform matrix stack according to commands
+class Turtle {
+	private:
+		void ensureCtm() {
+			if(ctm == NULL || ctm->empty()) {
+				throw runtime_error("Turtle ctm must be non-null, non-empty");
+			}
+		}
+
+	public:
+		unsigned segmentLength;
+		vec3 rotations;
+		stack<mat4>* ctm;
+		enum Axis { X, Y, Z };
+
+		Turtle() {
+			segmentLength = 0;
+			rotations = vec3(0, 0, 0);
+			ctm = NULL;
+		}
+
+		Turtle(const Turtle& other) {
+			segmentLength = other.segmentLength;
+			rotations = other.rotations;
+			ctm = other.ctm;
+		}
+
+		void rotate(Axis axis, bool positive) {
+			ensureCtm();
+			mat4 operand;
+			float theta = (positive ? 1 : -1) * rotations[axis];
+			if(axis == X) {
+				operand = RotateX(theta);
+			} else if(axis == Y) {
+				operand = RotateY(theta);
+			} else if(axis == Z) {
+				operand = RotateZ(theta);
+			}
+			ctm->top() *= operand;
+		}
+
+		void forward() {
+			ensureCtm();
+			ctm->top() *= Translate(0, 0, segmentLength);
+		}
+
+		void push() {
+			ensureCtm();
+			ctm->push(ctm->top());
+		}
+
+		void pop() {
+			ensureCtm();
+			ctm->pop();
+		}
+};
+
 
 class LSystem {
 	private:
@@ -61,17 +122,15 @@ class LSystem {
 		}
 
 	public:
-		unsigned segmentLength;
+		Turtle protoTurtle;
 		unsigned iterations;
-		vec3 rotations;
 		string start;
 
 		LSystem(string name) {
 			this->name = name;
 			turtleString = "";
 			start = "";
-			segmentLength = iterations = 0;
-			rotations = vec3(0, 0, 0);
+			iterations = 0;
 		}
 
 		string getName() {
@@ -112,11 +171,15 @@ class LSystem {
 			return turtleString;
 		}
 
+		Turtle* getTurtleCopy() {
+			return new Turtle(protoTurtle);
+		}
+
 		void print() {
 			cout << "LSystem " << name << ": " << endl <<
-				"len=" << segmentLength << ", " << endl <<
+				"len=" << protoTurtle.segmentLength << ", " << endl <<
 				"iter=" << iterations << ", " << endl <<
-				"rot=" << rotations << ", " << endl <<
+				"rot=" << protoTurtle.rotations << ", " << endl <<
 				"reps=(";
 			for (map<char, char>::const_iterator i = replacements.begin(); i != replacements.end(); ++i) {
 				cout << i->first << "->" << i->second << ", ";

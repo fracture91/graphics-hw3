@@ -135,6 +135,11 @@ int main(int argc, char **argv) {
 		lsystems[lsystems.size() - 1]->print();
 	}
 
+	Turtle* tur = new Turtle();
+	stack<mat4> ctm;
+	ctm.push(mat4());
+	tur->ctm = &ctm;
+	tur->rotate(Turtle::X, true);
 	// If you are using freeglut, the next two lines will check if 
 	// the code is truly 3.2. Otherwise, comment them out
 
