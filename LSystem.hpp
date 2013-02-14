@@ -59,6 +59,11 @@ class Turtle {
 			ctm->top() *= operand;
 		}
 
+		void turnAround() {
+			ensureCtm();
+			ctm->top() *= RotateY(180);
+		}
+
 		void forward() {
 			ensureCtm();
 			ctm->top() *= Translate(0, 0, segmentLength);

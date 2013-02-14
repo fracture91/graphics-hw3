@@ -11,12 +11,14 @@
 #include "MeshRenderer.hpp"
 #include "LSystem.hpp"
 #include "LSystemReader.hpp"
+#include "LSystemRenderer.hpp"
 
 // remember to prototype
 void display(void);
 void keyboard(unsigned char key, int x, int y);
 
 MeshRenderer* meshRenderer;
+LSystemRenderer* lsysRenderer;
 
 using namespace std;
 
@@ -43,15 +45,15 @@ GLuint setUpShaders(void) {
 //----------------------------------------------------------------------------
 // this is where the drawing should happen
 void display(void) {
-	meshRenderer->display();
+	lsysRenderer->display();
 }
 
 void reshape(int screenWidth, int screenHeight) {
-	meshRenderer->reshape(screenWidth, screenHeight);
+	lsysRenderer->reshape(screenWidth, screenHeight);
 }
 
 void idle(void) {
-	meshRenderer->idle();
+	//meshRenderer->idle();
 }
 
 //----------------------------------------------------------------------------
@@ -61,41 +63,6 @@ void keyboard(unsigned char key, int x, int y) {
 	switch (key) {
 		case 27: // ESC
 			exit(EXIT_SUCCESS);
-			break;
-		case 119: // w
-			meshRenderer->resetState();
-			break;
-		case 110: // n
-			meshRenderer->showNextMesh();
-			break;
-		case 112: // p
-			meshRenderer->showPrevMesh();
-			break;
-		case 101: // e
-			meshRenderer->toggleBoundingBox();
-			break;
-		case 88: // X
-		case 89: // Y
-		case 90: // Z
-		case 120: // x
-		case 121: // y
-		case 122: { // z
-			bool uppercase = key < 91;
-			unsigned offset = key - 88;
-			if(!uppercase) {
-				offset -= 32;
-			}
-			meshRenderer->toggleTranslateDelta(offset, uppercase);
-			break;
-		}
-		case 114: // r
-			meshRenderer->toggleRotate();
-			break;
-		case 98: // b
-			meshRenderer->toggleBreathing();
-			break;
-		case 109: // m
-			meshRenderer->toggleNormals();
 			break;
 	}
 }
@@ -132,14 +99,10 @@ int main(int argc, char **argv) {
 	for(vector<string>::const_iterator i = names->begin(); i != names->end(); ++i) {
 		LSystemReader reader((*i).c_str());
 		lsystems.push_back(reader.read());
-		lsystems[lsystems.size() - 1]->print();
+		//lsystems[lsystems.size() - 1]->print();
 	}
 
-	Turtle* tur = new Turtle();
-	stack<mat4> ctm;
-	ctm.push(mat4());
-	tur->ctm = &ctm;
-	tur->rotate(Turtle::X, true);
+
 	// If you are using freeglut, the next two lines will check if 
 	// the code is truly 3.2. Otherwise, comment them out
 
@@ -163,6 +126,8 @@ int main(int argc, char **argv) {
 	PLYReader reader("meshes/cylinder.ply");
 	meshes.push_back(reader.read());
 	meshRenderer = new MeshRenderer(meshes, program);
+	lsystems[1]->print();
+	lsysRenderer = new LSystemRenderer(program, 0, *lsystems[1]);
 	// assign handlers
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
