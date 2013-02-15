@@ -2,8 +2,12 @@
 #ifndef __LSYSTEMRENDERER_H_
 #define __LSYSTEMRENDERER_H_
 
+#include <vector>
+
 #include "LSystem.hpp"
 #include "PLYReader.hpp"
+
+using std::vector;
 
 
 
@@ -24,18 +28,24 @@ class LSystemRenderer {
 		GLsizeiptr cylinderLength;
 
 		void bufferPoints() {
-			cylinderLength = cylinder->getNumPoints();
-			vec4* cylinderPoints = cylinder->getPoints();
-			GLsizeiptr cylinderBytes = sizeof(cylinderPoints[0]) * cylinderLength;
+			vector<Mesh*> meshes;
+			meshes.push_back(cylinder);
+			meshes.push_back(sphere);
 
-			sphereLength = sphere->getNumPoints();
-			vec4* spherePoints = sphere->getPoints();
-			GLsizeiptr sphereBytes = sizeof(spherePoints[0]) * sphereLength;
-
-			GLsizeiptr totalBytes = sphereBytes + cylinderBytes;
+			GLsizeiptr totalBytes = 0;
+			for (vector<Mesh*>::const_iterator i = meshes.begin(); i != meshes.end(); ++i) {
+				totalBytes += (*i)->getNumBytes();
+			}
 			glBufferData(GL_ARRAY_BUFFER, totalBytes, NULL, GL_STATIC_DRAW);
-			glBufferSubData(GL_ARRAY_BUFFER, bufferStart, cylinderBytes, cylinderPoints);
-			glBufferSubData(GL_ARRAY_BUFFER, bufferStart + cylinderBytes, sphereBytes, spherePoints);
+
+			GLuint start = bufferStart;
+			for (vector<Mesh*>::const_iterator i = meshes.begin(); i != meshes.end(); ++i) {
+				Mesh* mesh = *i;
+				GLsizeiptr bytes = mesh->getNumBytes();
+				mesh->setDrawOffset(start / sizeof(mesh->getPoints()[0]));
+				glBufferSubData(GL_ARRAY_BUFFER, start, bytes, mesh->getPoints());
+				start += bytes;
+			}
 
 			GLuint posLoc = glGetAttribLocation(program, "vPosition");
 			glEnableVertexAttribArray(posLoc);
@@ -49,7 +59,41 @@ class LSystemRenderer {
 			}
 			projection = mat4()
 				* Perspective(90, (float)screenWidth/screenHeight, 0.0000001, 100000)
-				* LookAt(vec3(10, 30, 10), vec3(0, 0, 0), vec3(0, 1, 0));
+				* LookAt(vec3(20, 300, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+		}
+
+		// draw a component of a turtle (sphere or cylinder)
+		void drawTurtleComponent(Turtle* turtle, Mesh* comp) {
+			bool isCylinder = comp == cylinder;
+			vec3 size = comp->getBoundingBox()->getSize();
+
+			// want to scale the cylinder to be segmentLength long, thin
+			float thickRatio = turtle->thickness / size.y;
+			float zTarget = isCylinder ? turtle->segmentLength
+			                           : turtle->thickness;
+			mat4 scale = Scale(thickRatio, thickRatio, zTarget / size.z);
+
+			vec4 center = comp->getBoundingBox()->getCenter();
+			// move cylinder so its end is flush with the yz plane
+			vec4 dest = vec4(0, 0, size.z/2, 1);
+			if(!isCylinder) {
+				dest.z = 0; // sphere intersects plane
+			}
+			mat4 trans = Translate(dest - center);
+
+			mat4 finalModel = turtle->ctm->top() * scale * trans;
+
+			// draw next cylinder
+			GLuint modelLoc = glGetUniformLocationARB(program, "model_matrix");
+			glUniformMatrix4fv(modelLoc, 1, GL_TRUE, finalModel);
+
+			glDrawArrays(GL_TRIANGLES, comp->getDrawOffset(), comp->getNumPoints());
+		}
+
+		// draw the turtle in its current state
+		void drawTurtle(Turtle* turtle) {
+			drawTurtleComponent(turtle, sphere);
+			drawTurtleComponent(turtle, cylinder);
 		}
 
 	public:
@@ -70,7 +114,7 @@ class LSystemRenderer {
 		void display() {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glEnable(GL_DEPTH_TEST);
 			GLuint projLoc = glGetUniformLocationARB(program, "projection_matrix");
 			glUniformMatrix4fv(projLoc, 1, GL_TRUE, projection);
@@ -85,27 +129,7 @@ class LSystemRenderer {
 				char currentChar = *it;
 				
 				if(currentChar == 'F') {
-					vec3 size = cylinder->getBoundingBox()->getSize();
-
-					// want to scale the cylinder to be segmentLength long, thin
-					float ratio = 0.25 / size.y;
-					mat4 scale = Scale(ratio, ratio, turtle->segmentLength / size.z);
-
-					// move cylinder so its end is flush with the yz plane
-					vec4 center = cylinder->getBoundingBox()->getCenter();
-					vec4 dest = vec4(0, 0, size.z/2, 1);
-					mat4 trans = Translate(dest - center);
-
-					// rotate so tree grows upwards out of xz plane
-					//mat4 rotate = RotateX(90);
-
-					mat4 finalModel = modelView.top() * trans * scale;
-
-					// draw next cylinder
-					GLuint modelLoc = glGetUniformLocationARB(program, "model_matrix");
-					glUniformMatrix4fv(modelLoc, 1, GL_TRUE, finalModel);
-
-					glDrawArrays(GL_TRIANGLES, bufferStart, cylinderLength);
+					drawTurtle(turtle);
 				}
 
 				switch(currentChar) {

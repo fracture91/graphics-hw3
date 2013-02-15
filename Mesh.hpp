@@ -119,6 +119,7 @@ class Mesh {
 		unsigned lineIndex;
 		unsigned numPoints;
 		unsigned numNormalLinePoints;
+		unsigned drawOffset; // for external use
 		vec4* normals;
 		string name;
 		BoundingBox* box;
@@ -203,6 +204,10 @@ class Mesh {
 			return numNormalLinePoints;
 		}
 
+		GLsizeiptr getNumBytes() {
+			return sizeof(points[0]) * numPoints;
+		}
+
 		vec4* getPoints() {
 			return points;
 		}
@@ -213,6 +218,14 @@ class Mesh {
 
 		vec4* getNormalLines() {
 			return normalLines;
+		}
+
+		unsigned getDrawOffset() {
+			return drawOffset;
+		}
+
+		void setDrawOffset(unsigned offset) {
+			drawOffset = offset;
 		}
 
 		BoundingBox* getBoundingBox() {
