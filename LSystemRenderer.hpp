@@ -15,57 +15,18 @@ using std::vector;
 class LSystemRenderer {
 	private:
 		GLuint program;
-		GLuint bufferStart;
-		mat4 projection;
 		vector<LSystem*>& allSystems;
 		vector<LSystem*> systemsToDraw;
 		vector<vec4> colors;
 		vector<vec4> startPoints;
 		vec4 randomRange[2];
 
-		int screenWidth;
-		int screenHeight;
-		
+		vector<Mesh*> meshes;
 		Mesh* sphere;
 		GLsizeiptr sphereLength;
-
 		Mesh* cylinder;
 		GLsizeiptr cylinderLength;
 
-		void bufferPoints() {
-			vector<Mesh*> meshes;
-			meshes.push_back(cylinder);
-			meshes.push_back(sphere);
-
-			GLsizeiptr totalBytes = 0;
-			for (vector<Mesh*>::const_iterator i = meshes.begin(); i != meshes.end(); ++i) {
-				totalBytes += (*i)->getNumBytes();
-			}
-			glBufferData(GL_ARRAY_BUFFER, totalBytes, NULL, GL_STATIC_DRAW);
-
-			GLuint start = bufferStart;
-			for (vector<Mesh*>::const_iterator i = meshes.begin(); i != meshes.end(); ++i) {
-				Mesh* mesh = *i;
-				GLsizeiptr bytes = mesh->getNumBytes();
-				mesh->setDrawOffset(start / sizeof(mesh->getPoints()[0]));
-				glBufferSubData(GL_ARRAY_BUFFER, start, bytes, mesh->getPoints());
-				start += bytes;
-			}
-
-			GLuint posLoc = glGetAttribLocation(program, "vPosition");
-			glEnableVertexAttribArray(posLoc);
-			glVertexAttribPointer(posLoc, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-		}
-
-		void resetProjection() {
-			if(screenHeight == 0) {
-				projection = mat4(); // don't want to divide by zero...
-				return;
-			}
-			projection = mat4()
-				* Perspective(90, (float)screenWidth/screenHeight, 0.0000001, 100000)
-				* LookAt(vec3(20, 50, 20), vec3(-20, 20, -20), vec3(0, 1, 0));
-		}
 
 		// draw a component of a turtle (sphere or cylinder)
 		void drawTurtleComponent(Turtle* turtle, Mesh* comp) {
@@ -174,40 +135,26 @@ class LSystemRenderer {
 		}
 
 	public:
-		LSystemRenderer(GLuint program, GLuint bufferStart, vector<LSystem*>& allSystems)
+		LSystemRenderer(GLuint program, vector<LSystem*>& allSystems)
 				: allSystems(allSystems) {
 			this->program = program;
-			this->bufferStart = bufferStart;
-			screenWidth = 0;
-			screenHeight = 0;
+			
 			PLYReader sphereReader("meshes/sphere.ply");
 			sphere = sphereReader.read();
 			PLYReader cylinderReader("meshes/cylinder.ply");
 			cylinder = cylinderReader.read();
+			meshes.push_back(cylinder);
+			meshes.push_back(sphere);
+			
 			showOneSystem(0);
-			resetProjection();
-			bufferPoints();
 		}
 
 		void display() {
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glEnable(GL_DEPTH_TEST);
-			GLuint projLoc = glGetUniformLocationARB(program, "projection_matrix");
-			glUniformMatrix4fv(projLoc, 1, GL_TRUE, projection);
-
 			vec4 startPoint(0, 0, 0, 1);
 			for (vector<LSystem*>::const_iterator i = systemsToDraw.begin(); i != systemsToDraw.end(); ++i) {
 				int index = i - systemsToDraw.begin();
 				drawSystem(*i, startPoints[index], colors[index]);
 			}
-
-			glDisable(GL_DEPTH_TEST); 
-
-			// output to hardware, double buffered
-			glFlush();
-			glutSwapBuffers();
 		}
 
 		void showOneSystem(int index) {
@@ -232,11 +179,22 @@ class LSystemRenderer {
 			}
 		}
 
-		void reshape(int screenWidth, int screenHeight) {
-			this->screenWidth = screenWidth;
-			this->screenHeight = screenHeight;
-			glViewport(0, 0, screenWidth, screenHeight);
-			resetProjection();
+		void bufferPoints(GLuint bufferStart) {
+			for (vector<Mesh*>::const_iterator i = meshes.begin(); i != meshes.end(); ++i) {
+				Mesh* mesh = *i;
+				GLsizeiptr bytes = mesh->getNumBytes();
+				mesh->setDrawOffset(bufferStart / sizeof(mesh->getPoints()[0]));
+				glBufferSubData(GL_ARRAY_BUFFER, bufferStart, bytes, mesh->getPoints());
+				bufferStart += bytes;
+			}
+		}
+
+		GLsizeiptr getTotalBytes() {
+			GLsizeiptr totalBytes = 0;
+			for (vector<Mesh*>::const_iterator i = meshes.begin(); i != meshes.end(); ++i) {
+				totalBytes += (*i)->getNumBytes();
+			}
+			return totalBytes;
 		}
 
 };

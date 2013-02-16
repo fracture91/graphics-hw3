@@ -15,12 +15,14 @@
 #include "LSystem.hpp"
 #include "LSystemReader.hpp"
 #include "LSystemRenderer.hpp"
+#include "Scene.hpp"
 
 // remember to prototype
 void display(void);
 void keyboard(unsigned char key, int x, int y);
 
 LSystemRenderer* lsysRenderer;
+Scene* scene;
 
 using namespace std;
 
@@ -47,15 +49,11 @@ GLuint setUpShaders(void) {
 //----------------------------------------------------------------------------
 // this is where the drawing should happen
 void display(void) {
-	lsysRenderer->display();
+	scene->display();
 }
 
 void reshape(int screenWidth, int screenHeight) {
-	lsysRenderer->reshape(screenWidth, screenHeight);
-}
-
-void idle(void) {
-	//meshRenderer->idle();
+	scene->reshape(screenWidth, screenHeight);
 }
 
 //----------------------------------------------------------------------------
@@ -100,6 +98,7 @@ vector<string>* getFileNames(const char* path) {
 	return names;
 }
 
+
 //----------------------------------------------------------------------------
 // entry point
 int main(int argc, char **argv) {
@@ -140,12 +139,13 @@ int main(int argc, char **argv) {
 
 	srand(time(NULL));
 	lsystems[0]->print();
-	lsysRenderer = new LSystemRenderer(program, 0, lsystems);
+	lsysRenderer = new LSystemRenderer(program, lsystems);
+	scene = new Scene(program, *lsysRenderer);
+	scene->bufferPoints();
 	// assign handlers
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
-	glutIdleFunc(idle);
 	// should add menus
 	// add mouse handler
 	// add resize window functionality (should probably try to preserve aspect ratio)
