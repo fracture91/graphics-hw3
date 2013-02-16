@@ -179,14 +179,12 @@ class LSystemRenderer {
 			}
 		}
 
-		void bufferPoints(GLuint bufferStart) {
-			for (vector<Mesh*>::const_iterator i = meshes.begin(); i != meshes.end(); ++i) {
-				Mesh* mesh = *i;
-				GLsizeiptr bytes = mesh->getNumBytes();
-				mesh->setDrawOffset(bufferStart / sizeof(mesh->getPoints()[0]));
-				glBufferSubData(GL_ARRAY_BUFFER, bufferStart, bytes, mesh->getPoints());
-				bufferStart += bytes;
-			}
+		bool forestMode() {
+			return systemsToDraw.size() > 1;
+		}
+
+		vector<Mesh*>* getMeshes() {
+			return &meshes;
 		}
 
 		GLsizeiptr getTotalBytes() {

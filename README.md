@@ -7,7 +7,8 @@ Homework 3
 
 Renders five Lindenmayer systems defined in the lsystems directory.
 Can cycle though the five systems with 'a', 'b', 'c', 'd', 'e', and show
-all of them at random positions with 'f'.
+all of them at random positions with 'f'.  In "forest" mode, the cow and
+car meshes are also drawn.
 
 The program is linked against whatever files are present on the machine.
 The Zoo Lab machines contain the needed library files, so they're not
