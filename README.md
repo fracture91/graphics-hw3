@@ -39,11 +39,15 @@ Turtle instance.  This Turtle can be given all of the commands in the
 turtle string, and will modify a given transform matrix stack.
 LSystemRenderer will actually give the commands to the turtle and draw
 its progress to the screen as a PolyCylinder.  hw3.cpp hooks everything
-up with the standard GLUT callbacks.
+up with the standard GLUT callbacks.  The Scene object from Scene.hpp
+is capable of displaying the LSystems and arbitrary meshes
+simultaneously.
 
 The camera position is in the +x/+y/+z octant, looking to -x/-y/-z, so x
 and z axes both point out of the screen.
 
 None of the trees are scaled in any way, so some are rather small
 compared to others.
+
+I didn't get around to drawing the ground plane.
 
