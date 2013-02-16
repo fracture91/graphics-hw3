@@ -59,7 +59,7 @@ class LSystemRenderer {
 			}
 			projection = mat4()
 				* Perspective(90, (float)screenWidth/screenHeight, 0.0000001, 100000)
-				* LookAt(vec3(20, 300, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+				* LookAt(vec3(20, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
 		}
 
 		// draw a component of a turtle (sphere or cylinder)
@@ -68,6 +68,7 @@ class LSystemRenderer {
 			vec3 size = comp->getBoundingBox()->getSize();
 
 			// want to scale the cylinder to be segmentLength long, thin
+			//cout << "len: " << turtle->segmentLength << endl;
 			float thickRatio = turtle->thickness / size.y;
 			float zTarget = isCylinder ? turtle->segmentLength
 			                           : turtle->thickness;

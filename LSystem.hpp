@@ -30,19 +30,19 @@ class Turtle {
 	public:
 		unsigned segmentLength;
 		float thickness;
-		static const float defaultThickness = 0.25;
+		const float defaultThickness;
 		vec3 rotations;
 		stack<mat4>* ctm;
 		enum Axis { X, Y, Z };
 
-		Turtle() {
+		Turtle():defaultThickness(0.25) {
 			segmentLength = 0;
 			thickness = defaultThickness;
 			rotations = vec3(0, 0, 0);
 			ctm = NULL;
 		}
 
-		Turtle(const Turtle& other) {
+		Turtle(const Turtle& other):defaultThickness(0.25) {
 			segmentLength = other.segmentLength;
 			thickness = other.thickness;
 			rotations = other.rotations;
