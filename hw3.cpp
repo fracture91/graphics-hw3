@@ -73,7 +73,13 @@ void keyboard(unsigned char key, int x, int y) {
 		case 'e':
 			lsysRenderer->showOneSystem(key - 'a');
 			break;
+		case 'f':
+			vec3 max(10, 0, 10);
+			vec3 min(-30, 0, -30);
+			lsysRenderer->showAllSystemsRandomly(min, max);
+			break;
 	}
+	glutPostRedisplay();
 }
 
 vector<string>* getFileNames(const char* path) {

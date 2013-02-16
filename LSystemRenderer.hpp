@@ -19,7 +19,9 @@ class LSystemRenderer {
 		mat4 projection;
 		vector<LSystem*>& allSystems;
 		vector<LSystem*> systemsToDraw;
-		vec4 randomRange;
+		vector<vec4> colors;
+		vector<vec4> startPoints;
+		vec4 randomRange[2];
 
 		int screenWidth;
 		int screenHeight;
@@ -101,16 +103,28 @@ class LSystemRenderer {
 			return color;
 		}
 
+		// return a random point in the rectangle defined by randomRange
+		vec4 randomPoint() {
+			vec4 point(0, 0, 0, 1);
+			for(int i = 0; i < 3; i++) {
+				float lower = randomRange[0][i];
+				float upper = randomRange[1][i];
+				point[i] = lower + (float)rand() / ((float)RAND_MAX / (upper - lower));
+			}
+			return point;
+		}
+
 		// draw the given lsystem starting at the given position
-		void drawSystem(LSystem* sys, vec4 startPoint) {
+		void drawSystem(LSystem* sys, vec4 startPoint, vec4 color) {
 			Turtle* turtle = sys->getTurtleCopy();
 			stack<mat4> modelView;
-			modelView.push(RotateX(-90)); // point the tree upwards
+			// move to start point and point the tree upwards
+			modelView.push(Translate(startPoint) * RotateX(-90));
 			turtle->ctm = &modelView;
 			string turtleString = sys->getTurtleString();
 
 			GLuint colorLoc = glGetUniformLocationARB(program, "inColor");
-			glUniform4fv(colorLoc, 1, randomColor());
+			glUniform4fv(colorLoc, 1, color);
 
 			for(string::iterator it = turtleString.begin(); it != turtleString.end(); ++it) {
 				char currentChar = *it;
@@ -170,7 +184,7 @@ class LSystemRenderer {
 			sphere = sphereReader.read();
 			PLYReader cylinderReader("meshes/cylinder.ply");
 			cylinder = cylinderReader.read();
-			systemsToDraw.push_back(allSystems[0]);
+			showOneSystem(0);
 			resetProjection();
 			bufferPoints();
 		}
@@ -183,8 +197,10 @@ class LSystemRenderer {
 			GLuint projLoc = glGetUniformLocationARB(program, "projection_matrix");
 			glUniformMatrix4fv(projLoc, 1, GL_TRUE, projection);
 
+			vec4 startPoint(0, 0, 0, 1);
 			for (vector<LSystem*>::const_iterator i = systemsToDraw.begin(); i != systemsToDraw.end(); ++i) {
-				drawSystem(*i, vec4(0, 0, 0, 1));
+				int index = i - systemsToDraw.begin();
+				drawSystem(*i, startPoints[index], colors[index]);
 			}
 
 			glDisable(GL_DEPTH_TEST); 
@@ -197,7 +213,23 @@ class LSystemRenderer {
 		void showOneSystem(int index) {
 			systemsToDraw.clear();
 			systemsToDraw.push_back(allSystems[index]);
-			glutPostRedisplay();
+			startPoints.clear();
+			startPoints.push_back(vec4(0, 0, 0, 1));
+			colors.clear();
+			colors.push_back(randomColor());
+		}
+
+		void showAllSystemsRandomly(vec4 min, vec4 max) {
+			randomRange[0] = min;
+			randomRange[1] = max;
+			systemsToDraw.clear();
+			startPoints.clear();
+			colors.clear();
+			for (vector<LSystem*>::const_iterator sys = allSystems.begin(); sys != allSystems.end(); ++sys) {
+				systemsToDraw.push_back(*sys);
+				startPoints.push_back(randomPoint());
+				colors.push_back(randomColor());
+			}
 		}
 
 		void reshape(int screenWidth, int screenHeight) {
