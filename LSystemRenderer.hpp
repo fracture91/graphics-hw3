@@ -3,6 +3,7 @@
 #define __LSYSTEMRENDERER_H_
 
 #include <vector>
+#include <stdlib.h>
 
 #include "LSystem.hpp"
 #include "PLYReader.hpp"
@@ -92,6 +93,14 @@ class LSystemRenderer {
 			glDrawArrays(GL_TRIANGLES, comp->getDrawOffset(), comp->getNumPoints());
 		}
 
+		vec4 randomColor() {
+			vec4 color(0, 0, 0, 1);
+			for(int i = 0; i < 3; i++) {
+				color[i] = (float)rand() / RAND_MAX;
+			}
+			return color;
+		}
+
 		// draw the given lsystem starting at the given position
 		void drawSystem(LSystem* sys, vec4 startPoint) {
 			Turtle* turtle = sys->getTurtleCopy();
@@ -99,6 +108,9 @@ class LSystemRenderer {
 			modelView.push(RotateX(-90)); // point the tree upwards
 			turtle->ctm = &modelView;
 			string turtleString = sys->getTurtleString();
+
+			GLuint colorLoc = glGetUniformLocationARB(program, "inColor");
+			glUniform4fv(colorLoc, 1, randomColor());
 
 			for(string::iterator it = turtleString.begin(); it != turtleString.end(); ++it) {
 				char currentChar = *it;

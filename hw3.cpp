@@ -5,6 +5,9 @@
 	#include "unix_dirent.h"
 #endif
 #include <vector>
+#include <stdlib.h>
+#include <time.h>
+
 #include "Angel.h"
 #include "Mesh.hpp"
 #include "PLYReader.hpp"
@@ -17,7 +20,6 @@
 void display(void);
 void keyboard(unsigned char key, int x, int y);
 
-MeshRenderer* meshRenderer;
 LSystemRenderer* lsysRenderer;
 
 using namespace std;
@@ -129,11 +131,8 @@ int main(int argc, char **argv) {
 	glewInit();
 
 	GLuint program = setUpShaders();
-	// just a temp thing so we don't crash
-	vector<Mesh*> meshes = vector<Mesh*>();
-	PLYReader reader("meshes/cylinder.ply");
-	meshes.push_back(reader.read());
-	meshRenderer = new MeshRenderer(meshes, program);
+
+	srand(time(NULL));
 	lsystems[0]->print();
 	lsysRenderer = new LSystemRenderer(program, 0, lsystems);
 	// assign handlers
