@@ -64,6 +64,13 @@ void keyboard(unsigned char key, int x, int y) {
 		case 27: // ESC
 			exit(EXIT_SUCCESS);
 			break;
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+			lsysRenderer->showOneSystem(key - 'a');
+			break;
 	}
 }
 
@@ -95,6 +102,7 @@ int main(int argc, char **argv) {
 
 	// get a list of all the mesh data in meshes directory
 	vector<string>* names = getFileNames("lsystems");
+	std::sort(names->begin(), names->end());
 	vector<LSystem*> lsystems = vector<LSystem*>();
 	for(vector<string>::const_iterator i = names->begin(); i != names->end(); ++i) {
 		LSystemReader reader((*i).c_str());
@@ -126,8 +134,8 @@ int main(int argc, char **argv) {
 	PLYReader reader("meshes/cylinder.ply");
 	meshes.push_back(reader.read());
 	meshRenderer = new MeshRenderer(meshes, program);
-	lsystems[1]->print();
-	lsysRenderer = new LSystemRenderer(program, 0, *lsystems[1]);
+	lsystems[0]->print();
+	lsysRenderer = new LSystemRenderer(program, 0, lsystems);
 	// assign handlers
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);

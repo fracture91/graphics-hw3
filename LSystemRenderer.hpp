@@ -15,8 +15,10 @@ class LSystemRenderer {
 	private:
 		GLuint program;
 		GLuint bufferStart;
-		LSystem& lsys;
 		mat4 projection;
+		vector<LSystem*>& allSystems;
+		vector<LSystem*> systemsToDraw;
+		vec4 randomRange;
 
 		int screenWidth;
 		int screenHeight;
@@ -59,7 +61,7 @@ class LSystemRenderer {
 			}
 			projection = mat4()
 				* Perspective(90, (float)screenWidth/screenHeight, 0.0000001, 100000)
-				* LookAt(vec3(20, 10, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+				* LookAt(vec3(20, 50, 20), vec3(0, 0, 0), vec3(0, 1, 0));
 		}
 
 		// draw a component of a turtle (sphere or cylinder)
@@ -68,7 +70,7 @@ class LSystemRenderer {
 			vec3 size = comp->getBoundingBox()->getSize();
 
 			// want to scale the cylinder to be segmentLength long, thin
-			//cout << "len: " << turtle->segmentLength << endl;
+			// sphere is scaled uniformly
 			float thickRatio = turtle->thickness / size.y;
 			float zTarget = isCylinder ? turtle->segmentLength
 			                           : turtle->thickness;
@@ -83,54 +85,27 @@ class LSystemRenderer {
 			mat4 trans = Translate(dest - center);
 
 			mat4 finalModel = turtle->ctm->top() * scale * trans;
-
-			// draw next cylinder
 			GLuint modelLoc = glGetUniformLocationARB(program, "model_matrix");
 			glUniformMatrix4fv(modelLoc, 1, GL_TRUE, finalModel);
 
+			// draw the component
 			glDrawArrays(GL_TRIANGLES, comp->getDrawOffset(), comp->getNumPoints());
 		}
 
-		// draw the turtle in its current state
-		void drawTurtle(Turtle* turtle) {
-			drawTurtleComponent(turtle, sphere);
-			drawTurtleComponent(turtle, cylinder);
-		}
-
-	public:
-		LSystemRenderer(GLuint program, GLuint bufferStart, LSystem& lsys)
-				: lsys(lsys) {
-			this->program = program;
-			this->bufferStart = bufferStart;
-			screenWidth = 0;
-			screenHeight = 0;
-			PLYReader sphereReader("meshes/sphere.ply");
-			sphere = sphereReader.read();
-			PLYReader cylinderReader("meshes/cylinder.ply");
-			cylinder = cylinderReader.read();
-			resetProjection();
-			bufferPoints();
-		}
-
-		void display() {
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			glEnable(GL_DEPTH_TEST);
-			GLuint projLoc = glGetUniformLocationARB(program, "projection_matrix");
-			glUniformMatrix4fv(projLoc, 1, GL_TRUE, projection);
-
-			Turtle* turtle = lsys.getTurtleCopy();
+		// draw the given lsystem starting at the given position
+		void drawSystem(LSystem* sys, vec4 startPoint) {
+			Turtle* turtle = sys->getTurtleCopy();
 			stack<mat4> modelView;
 			modelView.push(RotateX(-90)); // point the tree upwards
 			turtle->ctm = &modelView;
-			string turtleString = lsys.getTurtleString();
+			string turtleString = sys->getTurtleString();
 
 			for(string::iterator it = turtleString.begin(); it != turtleString.end(); ++it) {
 				char currentChar = *it;
 				
 				if(currentChar == 'F') {
-					drawTurtle(turtle);
+					drawTurtleComponent(turtle, sphere);
+					drawTurtleComponent(turtle, cylinder);
 				}
 
 				switch(currentChar) {
@@ -168,11 +143,49 @@ class LSystemRenderer {
 				}
 			}
 
+			delete turtle;
+
+		}
+
+	public:
+		LSystemRenderer(GLuint program, GLuint bufferStart, vector<LSystem*>& allSystems)
+				: allSystems(allSystems) {
+			this->program = program;
+			this->bufferStart = bufferStart;
+			screenWidth = 0;
+			screenHeight = 0;
+			PLYReader sphereReader("meshes/sphere.ply");
+			sphere = sphereReader.read();
+			PLYReader cylinderReader("meshes/cylinder.ply");
+			cylinder = cylinderReader.read();
+			systemsToDraw.push_back(allSystems[0]);
+			resetProjection();
+			bufferPoints();
+		}
+
+		void display() {
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glEnable(GL_DEPTH_TEST);
+			GLuint projLoc = glGetUniformLocationARB(program, "projection_matrix");
+			glUniformMatrix4fv(projLoc, 1, GL_TRUE, projection);
+
+			for (vector<LSystem*>::const_iterator i = systemsToDraw.begin(); i != systemsToDraw.end(); ++i) {
+				drawSystem(*i, vec4(0, 0, 0, 1));
+			}
+
 			glDisable(GL_DEPTH_TEST); 
 
 			// output to hardware, double buffered
 			glFlush();
 			glutSwapBuffers();
+		}
+
+		void showOneSystem(int index) {
+			systemsToDraw.clear();
+			systemsToDraw.push_back(allSystems[index]);
+			glutPostRedisplay();
 		}
 
 		void reshape(int screenWidth, int screenHeight) {
