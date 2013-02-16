@@ -20,10 +20,8 @@
 #    character representing the left-hand side of the rule, and "R" is a sequence
 #    of characters representing the replacement string for "L".
 len: 1
-iter: 3
+iter: 4
 rot: 22.5 22.5 22.5
-rep: B,
-rep: C,F
-start: FBC
-F: F
+start: [+F][F][-F]
+F: FF[+&&F][-^^F]
 # TODO

@@ -61,7 +61,7 @@ class LSystemRenderer {
 			}
 			projection = mat4()
 				* Perspective(90, (float)screenWidth/screenHeight, 0.0000001, 100000)
-				* LookAt(vec3(20, 50, 20), vec3(0, 0, 0), vec3(0, 1, 0));
+				* LookAt(vec3(20, 50, 20), vec3(-20, 20, -20), vec3(0, 1, 0));
 		}
 
 		// draw a component of a turtle (sphere or cylinder)
